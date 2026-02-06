@@ -1,11 +1,12 @@
 pipeline {
     agent any
+    
     triggers {
         cron '00 20 * * 1-5' // Runs at 20:00 on every day-of-week from Monday through Friday
     }
 
     stages {
-        stage('Security Scan') {
+        stage('GoSec Security Scan') {
             steps {
                 echo 'Running gosec security scan...'
                 sh '''
@@ -32,11 +33,21 @@ pipeline {
                 '''
             }
         }
-    }
+        stage('Security Scan') {
+            steps {
+                registerSecurityScan(
+                    // Security Scan to include
+                    artifacts: "gosec-results.sarif",
+                    format: "sarif",
+                    archive: true
+                )
+            }
+        }     
 
-    post {
-        always {
-            archiveArtifacts artifacts: 'gosec-results.sarif', fingerprint: true
-        }
+    // post {
+    //     always {
+    //         archiveArtifacts artifacts: 'gosec-results.sarif', fingerprint: true
+    //     }
+    // }
     }
 }
